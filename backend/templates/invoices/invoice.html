@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Facture {{ invoice.invoice_number }}</title>
+    <style>
+        @page { size: A4; margin: 0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #1e293b;
+            line-height: 1.5;
+            background: #ffffff;
+        }
+
+        /* ===== EN-TETE BANDEAU ===== */
+        .header-banner {
+            width: 100%;
+            height: 160px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #2563eb 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .header-banner::after {
+            content: "";
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 35px;
+            background: #ffffff;
+            clip-path: polygon(0 100%, 100% 100%, 100% 0);
+        }
+        .header-content {
+            position: relative;
+            z-index: 10;
+            padding: 25px 45px 0 45px;
+        }
+        .logo-section {
+            display: inline-block;
+            vertical-align: top;
+            width: 40%;
+        }
+        .logo-section img {
+            max-height: 55px;
+            max-width: 180px;
+            display: block;
+        }
+        .company-header-info {
+            display: inline-block;
+            vertical-align: top;
+            width: 58%;
+            text-align: right;
+            color: #ffffff;
+        }
+        .company-header-info h1 {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .company-header-info .tagline {
+            font-size: 10px;
+            opacity: 0.8;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        /* ===== BADGE FACTURE ===== */
+        .invoice-badge-area {
+            padding: 0 45px;
+            margin-top: -15px;
+            position: relative;
+            z-index: 20;
+        }
+        .invoice-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #ffffff;
+            padding: 10px 30px;
+            font-size: 18px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            border-radius: 0 6px 6px 0;
+        }
+        .invoice-meta-inline {
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 25px;
+            font-size: 12px;
+            color: #475569;
+        }
+        .invoice-meta-inline strong { color: #0f172a; }
+
+        /* ===== CORPS ===== */
+        .body-container { padding: 30px 45px; }
+        .info-grid { width: 100%; margin-bottom: 25px; }
+        .info-grid td {
+            vertical-align: top;
+            width: 50%;
+            padding: 0;
+        }
+        .info-box {
+            padding: 18px;
+            border-radius: 8px;
+            min-height: 110px;
+        }
+        .info-box.client {
+            background: #f8fafc;
+            border-left: 4px solid #2563eb;
+        }
+        .info-box.company {
+            background: #f0f9ff;
+            border-left: 4px solid #f59e0b;
+        }
+        .info-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+        .info-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 5px;
+        }
+        .info-detail {
+            font-size: 11px;
+            color: #64748b;
+            line-height: 1.7;
+        }
+        .info-detail strong { color: #334155; }
+
+        /* ===== TABLEAU ===== */
+        .items-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 20px;
+        }
+        .items-table thead th {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+            color: #ffffff;
+            padding: 12px 15px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            text-align: left;
+        }
+        .items-table thead th:first-child { border-radius: 6px 0 0 0; }
+        .items-table thead th:last-child { border-radius: 0 6px 0 0; text-align: right; }
+        .items-table thead th.text-center { text-align: center; }
+        .items-table tbody td {
+            padding: 12px 15px;
+            font-size: 12px;
+            color: #334155;
+            border-bottom: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
+        .items-table tbody tr:nth-child(even) td { background: #f8fafc; }
+        .items-table tbody tr:last-child td { border-bottom: 2px solid #1e3a5f; }
+        .items-table tbody td.text-right { text-align: right; font-weight: 600; }
+        .items-table tbody td.text-center { text-align: center; }
+        .product-name { font-weight: 700; color: #0f172a; margin-bottom: 2px; }
+        .product-desc { font-size: 10px; color: #94a3b8; }
+
+        /* ===== TOTAUX ===== */
+        .totals-wrapper { width: 100%; margin-bottom: 25px; }
+        .totals-wrapper td { vertical-align: top; }
+        .totals-wrapper td.left-col { width: 55%; padding-right: 15px; }
+        .totals-wrapper td.right-col { width: 45%; }
+        .payment-info-box {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 18px;
+            border: 1px solid #e2e8f0;
+        }
+        .payment-info-box .info-label { margin-bottom: 10px; }
+        .payment-row {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+        .payment-row strong {
+            color: #334155;
+            display: inline-block;
+            width: 110px;
+        }
+        .totals-box {
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        .total-row {
+            padding: 8px 18px;
+            font-size: 12px;
+            color: #64748b;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .total-row::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+        .total-row .label { float: left; }
+        .total-row .value { float: right; font-weight: 600; color: #334155; }
+        .total-row.grand-total {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 800;
+            border-bottom: none;
+            padding: 12px 18px;
+        }
+        .total-row.grand-total .value {
+            color: #f59e0b;
+            font-size: 17px;
+        }
+
+        /* ===== FOOTER ===== */
+        .invoice-footer {
+            margin-top: 15px;
+            padding: 20px 45px;
+            background: #f8fafc;
+            border-top: 3px solid #f59e0b;
+        }
+        .footer-grid { width: 100%; }
+        .footer-grid td {
+            vertical-align: top;
+            width: 33.33%;
+        }
+        .footer-section h4 {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        .footer-section p {
+            font-size: 11px;
+            color: #64748b;
+            line-height: 1.7;
+        }
+        .footer-section .highlight { color: #0f172a; font-weight: 600; }
+        .signature-area { text-align: center; padding-top: 8px; }
+        .signature-line {
+            width: 100px;
+            height: 1px;
+            background: #94a3b8;
+            margin: 25px auto 6px auto;
+        }
+        .signature-name { font-size: 11px; color: #475569; font-weight: 600; }
+        .signature-role {
+            font-size: 9px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .bottom-bar {
+            height: 6px;
+            background: linear-gradient(90deg, #0f172a 0%, #1e3a5f 40%, #2563eb 70%, #f59e0b 100%);
+        }
+
+        /* ===== WATERMARK PREVIEW ===== */
+        {% if preview %}
+        .preview-watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-35deg);
+            font-size: 90px;
+            color: rgba(0, 0, 0, 0.035);
+            font-weight: 900;
+            pointer-events: none;
+            z-index: 1000;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+        }
+        {% endif %}
+    </style>
+</head>
+<body>
+    {% if preview %}
+    <div class="preview-watermark">PREVISUALISATION</div>
+    {% endif %}
+
+    <!-- ===== EN-TETE AVEC LOGO ===== -->
+    <div class="header-banner">
+        <div class="header-content">
+            <div class="logo-section">
+                <!-- LOGO HOGENTECH -->
+                <img src="{{ logo_path }}" alt="HogenTech" style="max-height:55px; max-width:180px;">
+            </div>
+            <div class="company-header-info">
+                <h1>{{ company.name }}</h1>
+                <div class="tagline">Solutions Technologiques</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== BADGE FACTURE ===== -->
+    <div class="invoice-badge-area">
+        <div class="invoice-badge">FACTURE</div>
+        <div class="invoice-meta-inline">
+            <strong>N :</strong> {{ invoice.invoice_number }} &nbsp;&nbsp;|&nbsp;&nbsp;
+            <strong>Date :</strong> {{ date }} &nbsp;&nbsp;|&nbsp;&nbsp;
+            <strong>Commande :</strong> {{ order.order_number }}
+        </div>
+    </div>
+
+    <!-- ===== CORPS ===== -->
+    <div class="body-container">
+        <table class="info-grid">
+            <tr>
+                <td style="padding-right: 12px;">
+                    <div class="info-box client">
+                        <div class="info-label">Facturer a</div>
+                        <div class="info-name">{{ order.customer_name|default:"Client Comptant" }}</div>
+                        <div class="info-detail">
+                            {% if order.customer_phone %}Tel: {{ order.customer_phone }}<br>{% endif %}
+                            {% if order.customer_email %}Email: {{ order.customer_email }}<br>{% endif %}
+                            <strong>Paiement :</strong> {{ order.get_payment_method_display }}
+                        </div>
+                    </div>
+                </td>
+                <td style="padding-left: 12px;">
+                    <div class="info-box company">
+                        <div class="info-label">Etabli par</div>
+                        <div class="info-name">{{ company.name }}</div>
+                        <div class="info-detail">
+                            {% if company.address %}{{ company.address }}<br>{% endif %}
+                            {% if company.phone %}Tel: {{ company.phone }}<br>{% endif %}
+                            {% if company.email %}Email: {{ company.email }}{% endif %}
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- ===== TABLEAU ARTICLES ===== -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 45%;">Produit</th>
+                    <th style="width: 15%;" class="text-center">Qte</th>
+                    <th style="width: 20%;">Prix unit.</th>
+                    <th style="width: 20%;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>
+                        <div class="product-name">{{ item.product_name }}</div>
+                        <div class="product-desc">{{ item.product.category.name|default:"" }}</div>
+                    </td>
+                    <td class="text-center">{{ item.quantity }}</td>
+                    <td>{{ item.unit_price|floatformat:0 }} FCFA</td>
+                    <td class="text-right">{{ item.subtotal|floatformat:0 }} FCFA</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- ===== TOTAUX ===== -->
+        <table class="totals-wrapper">
+            <tr>
+                <td class="left-col">
+                    <div class="payment-info-box">
+                        <div class="info-label">Details commande</div>
+                        <div class="payment-row">
+                            <strong>Statut :</strong> {{ order.get_status_display }}
+                        </div>
+                        <div class="payment-row">
+                            <strong>Date :</strong> {{ order.created_at|date:"d/m/Y H:i" }}
+                        </div>
+                        {% if order.user %}
+                        <div class="payment-row">
+                            <strong>Vendeur :</strong> {{ order.user.get_full_name|default:order.user.username }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </td>
+                <td class="right-col">
+                    <div class="totals-box">
+                        <div class="total-row">
+                            <span class="label">Sous-total</span>
+                            <span class="value">{{ order.total|floatformat:0 }} FCFA</span>
+                        </div>
+                        <div class="total-row">
+                            <span class="label">TVA (0%)</span>
+                            <span class="value">0 FCFA</span>
+                        </div>
+                        <div class="total-row grand-total">
+                            <span class="label">TOTAL A PAYER</span>
+                            <span class="value">{{ order.total|floatformat:0 }} FCFA</span>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ===== PIED DE PAGE ===== -->
+    <div class="invoice-footer">
+        <table class="footer-grid">
+            <tr>
+                <td style="padding-right: 15px;">
+                    <div class="footer-section">
+                        <h4>Contact</h4>
+                        <p>
+                            <span class="highlight">{{ company.name }}</span><br>
+                            {{ company.address|default:"" }}<br>
+                            {{ company.phone|default:"" }}<br>
+                            {{ company.email|default:"" }}
+                        </p>
+                    </div>
+                </td>
+                <td style="padding: 0 15px;">
+                    <div class="footer-section">
+                        <h4>Remarques</h4>
+                        <p>
+                            Facture generee electroniquement.<br>
+                            Valide sans signature manuscrite.<br>
+                            Merci pour votre confiance !
+                        </p>
+                    </div>
+                </td>
+                <td style="padding-left: 15px;">
+                    <div class="footer-section signature-area">
+                        <div class="signature-line"></div>
+                        <div class="signature-name">Direction</div>
+                        <div class="signature-role">HogenTech Store</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="bottom-bar"></div>
+</body>
+</html>
